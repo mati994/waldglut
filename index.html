@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b130e">
+  <meta name="description" content="Waldglut – ein kleines, spielbares Idle-Clicker-Experiment.">
+  <title>Waldglut 0.3 – Die Waldchronik</title>
+  <style>
+    :root { color-scheme:dark; --bg:#09120d; --surface:#111d15; --surface2:#17251a; --ink:#f4efdf; --muted:#9aab95; --gold:#efc980; --bright:#ffe1a5; --green:#9fbb82; --border:rgba(196,218,171,.13); --radius:22px; }
+    * {box-sizing:border-box} html,body {min-height:100%;margin:0} body {background:radial-gradient(ellipse at 48% -16%,#1d3022 0,transparent 47%),var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    button {font:inherit} button:focus-visible {outline:2px solid var(--bright);outline-offset:4px} .app {max-width:1440px;margin:auto;padding:24px clamp(14px,3vw,44px) 32px;}
+    .topbar {display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:22px;}
+    .brand {display:flex;align-items:center;gap:13px}.brand-logo {height:46px;width:46px;display:grid;place-items:center;border-radius:16px;color:var(--gold);background:radial-gradient(circle at 50% 45%,#53633b 0,#233824 46%,#101d14 78%);border:1px solid #55734a66;box-shadow:inset 0 0 22px #b2cc6250;}
+    .brand h1{font-family:Georgia,"Times New Roman",serif;font-size:29px;font-weight:500;letter-spacing:.035em;margin:0;line-height:1.08}.brand p{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:4px 0 0;}
+    .topactions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{border:1px solid var(--border);border-radius:100px;padding:7px 12px;color:#bacaa9;background:#17241b;font-size:11px;letter-spacing:.08em}.ghost{cursor:pointer;color:#cfdbc3;border:1px solid var(--border);background:#172319;border-radius:99px;padding:8px 13px;font-size:12px}.ghost:hover{background:#27372a}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}.stat{padding:15px 19px;border:1px solid var(--border);border-radius:19px;background:linear-gradient(138deg,rgba(35,52,35,.77),rgba(18,30,22,.9));}.stat label{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:10px;margin-bottom:4px}.stat strong{font-size:clamp(19px,2.2vw,29px);font-weight:600;line-height:1.35;white-space:nowrap;font-variant-numeric:tabular-nums}.stat strong small{font-size:12px;font-weight:450;color:#adbca3;margin-left:5px}
+    .main{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(290px,.85fr);gap:16px;align-items:stretch}.leftcol{min-width:0}.scene{position:relative;isolation:isolate;overflow:hidden;min-height:clamp(500px,62vh,685px);border:1px solid #49614453;border-radius:var(--radius);background:radial-gradient(ellipse at 51% 72%,rgba(70,87,49,.2),transparent 37%),radial-gradient(ellipse at 50% 28%,rgba(45,73,51,.18),transparent 53%),linear-gradient(180deg,#07100d 0%,#0c1b15 62%,#142216 100%); box-shadow:inset 0 30px 100px #03080580;}
+    .scene::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:7;box-shadow:inset 0 0 100px 30px #050b08a0}
+    .scene-haze{position:absolute;inset:-15%;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 52% 68%,rgba(255,193,104,.13),transparent 32%);opacity:.25;transition:opacity 1.6s}
+    .scene[data-stage="1"] .scene-haze{opacity:.35}.scene[data-stage="2"] .scene-haze{opacity:.5}.scene[data-stage="3"] .scene-haze{opacity:.7}.scene[data-stage="4"] .scene-haze{opacity:.85}.scene[data-stage="5"] .scene-haze,.scene[data-stage="6"] .scene-haze,.scene[data-stage="7"] .scene-haze,.scene[data-stage="8"] .scene-haze,.scene[data-stage="9"] .scene-haze{opacity:1}
+    .moon{position:absolute;width:66px;height:66px;right:15%;top:16%;border-radius:50%;z-index:0;background:#f3e6ba;box-shadow:0 0 30px #f6e7bb50,0 0 90px #e6d6a321;opacity:0;transition:opacity 1.5s}.scene.has-moon .moon{opacity:.45}
+    .trees-back{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.75;pointer-events:none}.floor{position:absolute;z-index:1;bottom:-10%;left:-10%;width:120%;height:40%;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 10%,#293922 0,#182719 34%,#0c180f 72%);box-shadow:0 -25px 90px #26392520;}
+    .ground-glow{position:absolute;z-index:1;bottom:12%;left:50%;transform:translateX(-50%);width:290px;height:73px;border-radius:50%;pointer-events:none;background:#d7ac5a;filter:blur(33px);opacity:.08;transition:opacity 1s}.scene[data-stage="1"] .ground-glow{opacity:.2}.scene[data-stage="2"] .ground-glow{opacity:.3}.scene[data-stage="3"] .ground-glow{opacity:.45}.scene[data-stage="4"] .ground-glow,.scene[data-stage="5"] .ground-glow,.scene[data-stage="6"] .ground-glow,.scene[data-stage="7"] .ground-glow,.scene[data-stage="8"] .ground-glow,.scene[data-stage="9"] .ground-glow{opacity:.57}
+    .scene-head{position:absolute;left:23px;top:20px;z-index:9}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#aec4a5}.scene-head h2{font:normal 25px/1.2 Georgia,serif;margin:4px 0 0;color:#ede6ce}.scene-note{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:#b8c9a6;font-size:12px;z-index:10;letter-spacing:.02em;pointer-events:none;text-shadow:0 1px 10px #08100d}
+    .plant-button{display:block;position:absolute;z-index:5;left:50%;bottom:11%;transform:translateX(-50%);width:min(83%,440px);height:min(78%,455px);border:0;background:none;padding:0;color:inherit;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:filter .25s;outline-offset:-25px}.plant-button:active{filter:brightness(1.18)}.plant-button:focus-visible{outline:2px solid #fee3a0;border-radius:45%}.plant-svg{height:100%;width:100%;overflow:visible;filter:drop-shadow(0 0 16px #e0be6e3b)}.plant-button.bump .plant-svg{animation:tap-pulse .23s ease-out}
+    @keyframes tap-pulse{0%{transform:scale(1)}40%{transform:scale(1.037)}100%{transform:scale(1)}}
+    .plant-stage{display:none;transform-origin:210px 330px;animation:plant-breathe 5.5s ease-in-out infinite}.scene[data-growth="sprout"] .plant-stage.sprout,.scene[data-growth="sapling"] .plant-stage.sapling,.scene[data-growth="tree"] .plant-stage.tree{display:block}@keyframes plant-breathe{0%,100%{transform:rotate(-.45deg)}50%{transform:rotate(.45deg)}}
+    .plant-button .leaf{filter:drop-shadow(0 0 6px #eccd7085)}.plant-button .vein{fill:none;stroke:#eccc8b;stroke-width:1.8;opacity:.6}.sprout-extra{opacity:0;transition:opacity 1.5s}.scene[data-stage="3"] .sprout-extra,.scene[data-stage="4"] .sprout-extra{opacity:1}
+    .forest-prop{position:absolute;z-index:2;bottom:13%;opacity:0;transform:translateY(18px) scale(.5);transform-origin:50% 100%;transition:opacity 1.4s ease,transform 1.8s cubic-bezier(.18,.8,.2,1);pointer-events:none;filter:drop-shadow(0 0 6px #eab86182);font-size:38px}
+    .forest-prop.moss{left:15%;bottom:15%;font-size:31px}.forest-prop.moss2{right:12%;bottom:13%;font-size:29px;transition-delay:.5s}
+    .forest-prop.mushroom{left:22%;bottom:15%;transition-delay:.1s}.forest-prop.mushroom2{right:22%;bottom:15%;font-size:31px;transition-delay:.75s}
+    .forest-prop.flowers{right:12%;bottom:18%;font-size:25px;transition-delay:.65s}
+    .scene.has-moss .moss,.scene.has-moss .moss2,.scene.has-mushrooms .mushroom,.scene.has-mushrooms .mushroom2,.scene.has-flowers .flowers{opacity:.87;transform:translateY(0) scale(1)}
+    .scene.has-mushrooms .mushroom,.scene.has-mushrooms .mushroom2{animation:mushroom-glow 3.8s 1.8s ease-in-out infinite alternate}
+    @keyframes mushroom-glow{from{filter:drop-shadow(0 0 3px #b4c97b44)}to{filter:drop-shadow(0 0 17px #efbb6cbb)}}
+    .fireflies{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}.firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe7a2;box-shadow:0 0 8px 4px #efd17b6e,0 0 25px #ffce7e;opacity:.85;animation:firefly-drift var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay)}@keyframes firefly-drift{0%{transform:translate(0,0) scale(.65);opacity:.28}45%{opacity:.92}100%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:.62}}
+    .particles{position:absolute;inset:0;pointer-events:none;z-index:8}.particle{position:absolute;width:7px;height:7px;border-radius:50%;background:#ffe3a0;box-shadow:0 0 14px 4px #f3bf67a2;animation:particle-rise .9s ease-out forwards}@keyframes particle-rise{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}.click-float{position:absolute;color:#ffe5b3;font-size:18px;font-weight:650;text-shadow:0 0 15px #ffcd77;animation:float-num .9s forwards}@keyframes float-num{from{transform:translateY(0);opacity:1}to{transform:translateY(-50px);opacity:0}}
+    .toast{position:absolute;z-index:12;left:50%;top:21%;transform:translateX(-50%) translateY(-10px);width:max-content;max-width:85%;text-align:center;padding:10px 19px;border:1px solid #d2ad6b77;border-radius:15px;background:#19251bE8;color:#ffe0a5;box-shadow:0 15px 40px #060d0d88;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;font-family:Georgia,serif;font-size:16px}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .milestone{border:1px solid var(--border);border-radius:19px;padding:17px 20px;margin-top:14px;background:#121e16}.milestone-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.milestone-head strong{font-size:13px;font-weight:600}.milestone-head span{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}.progress{height:8px;background:#26352a;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,#7d975c,#edbd74);width:0;transition:width .4s;border-radius:99px}.milestone p{color:var(--muted);font-size:12px;margin:9px 0 0}
+    .panel{border:1px solid var(--border);border-radius:var(--radius);padding:22px 18px 19px;background:linear-gradient(145deg,#18271c,#101c15 70%);display:flex;flex-direction:column;min-width:0}.panel-title{font:normal 25px/1.15 Georgia,serif;margin:4px 0 5px}.panel-sub{margin:0 0 20px;color:var(--muted);font-size:12px}.shop{display:flex;flex-direction:column;gap:10px}.upgrade{display:flex;align-items:center;gap:12px;border-radius:15px;border:1px solid #3c544078;background:linear-gradient(115deg,#243427,#1a2a1e);color:var(--ink);text-align:left;width:100%;padding:13px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;min-height:83px}.upgrade:not(:disabled):hover{background:#2d412e;border-color:#b1a06a;transform:translateY(-1px)}.upgrade:disabled{opacity:.48;cursor:not-allowed}.upgrade .glyph{display:grid;place-items:center;flex-shrink:0;height:46px;width:46px;border:1px solid #c0ad7070;border-radius:13px;background:radial-gradient(circle at center,#53623b4d,#1a2a20);font-size:24px;color:#f6d690}.upgrade .details{display:block;flex:1;min-width:0}.upgrade .name{font-size:13px;font-weight:660;display:block}.upgrade .effect{font-size:11px;color:#b1c4a6;display:block;margin-top:2px;white-space:normal}.upgrade .price{color:#f7d398;font-size:12px;display:block;margin-top:5px;font-weight:600;font-variant-numeric:tabular-nums}.upgrade .count{align-self:center;color:#acbea4;border:1px solid #5b70514d;border-radius:99px;padding:3px 8px;font-size:11px;font-variant-numeric:tabular-nums}
+    .footer-tip{margin-top:auto;padding-top:23px;color:#9fb09b;font-size:12px;line-height:1.65}.separator{height:1px;background:var(--border);margin-bottom:15px}.footer-tip strong{color:#d8e1c8;font-weight:550}.preview-note{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.preview-note span{font-size:11px;color:#9fb09b}.tinybtn{font-size:11px;background:none;border:0;color:#dfc18c;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}.tinybtn:hover{color:#ffe5b2}.credit{text-align:center;font-size:11px;color:#7f9782;letter-spacing:.06em;margin:18px 0 0}
+
+
+    /* Purchased light-mushroom colonies: at most six in addition to two story props. */
+    .mushroom-colonies {position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+    .purchased-colony {position:absolute;left:var(--x);bottom:var(--y);width:var(--width);height:auto;aspect-ratio:100 / 86;transform-origin:50% 100%;transform:translateX(-50%) scale(var(--scale));filter:drop-shadow(0 0 5px #f0c16b90);opacity:.98;animation:colony-bloom .95s cubic-bezier(.15,.8,.25,1) both;animation-delay:var(--delay)}
+    .purchased-colony .colony-halo {position:absolute;inset:3% -12% 0;border-radius:50%;background:radial-gradient(ellipse at 50% 65%,rgba(255,214,129,var(--glow)) 0%,rgba(255,205,114,.10) 37%,transparent 69%);filter:blur(8px);animation:colony-pulse 3.7s ease-in-out infinite alternate;animation-delay:var(--delay)}
+    .purchased-colony svg {position:relative;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 6px #eabd6ba0)}
+    .purchased-colony .cap {fill:#e9b96d;stroke:#fde5aa;stroke-width:1.5}
+    .purchased-colony .stem {fill:#d5c7a4;stroke:#8a8659;stroke-width:1}
+    .purchased-colony .spot {fill:#fff5ce;opacity:.86}
+    .purchased-colony .under {fill:#ffdf90;opacity:.75}
+    @keyframes colony-bloom {from {opacity:0;transform:translateX(-50%) translateY(17px) scale(.15)}to {opacity:.98;transform:translateX(-50%) scale(var(--scale))}}
+    @keyframes colony-pulse {from {opacity:.58}to {opacity:1}}
+    .mushroom-hint {margin:10px 1px 0;padding:9px 11px;background:#202e21;border:1px solid #ad935347;border-radius:11px;color:#ddceac;font-size:11px;line-height:1.45}
+    .mushroom-hint strong{color:#ffdfa0;font-weight:600}
+
+    .firefly.evo-1{width:6px;height:6px;box-shadow:0 0 12px 5px #f7ce79b5,0 0 34px #e8b94c88}
+    .firefly.evo-2{width:7px;height:7px;background:#fff0ae;box-shadow:0 0 14px 6px #ffd479c9,0 0 38px #ffe2a588}
+    .firefly.evo-3,.firefly.evo-4{width:8px;height:8px;background:#fff6d1;box-shadow:0 0 21px 7px #ffe099d6,0 0 48px #ffc77baa}
+    .firefly.evo-1::before,.firefly.evo-2::before,.firefly.evo-3::before,.firefly.evo-4::before{content:"";position:absolute;left:-5px;top:-4px;width:16px;height:9px;background:linear-gradient(90deg,#fef8cf75,transparent 48%,#fef8cf75);border-radius:70%;transform:rotate(-12deg)}
+    .evolution{margin-top:17px;padding:15px;border:1px solid #ad956041;border-radius:15px;background:linear-gradient(135deg,#263b26a6,#16241a)}
+    .evolution .evo-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.evolution h3{font:normal 19px Georgia,serif;color:#ffe0a4;margin:0}.evolution .evo-info{font-size:12px;color:#b8caa8;margin:7px 0 12px}
+    .evo-track{height:8px;border-radius:99px;overflow:hidden;background:#34402f}.evo-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#91b76e,#fbd48d);border-radius:99px;transition:width .2s}
+    .evo-progress{font-size:11px;color:#e2c99a;white-space:nowrap}.evo-foot{font-size:11px;color:#aebf9e;margin-top:8px}
+    .save-tools{margin-top:18px;padding:14px;border:1px solid var(--border);border-radius:15px;background:#132117}.save-tools h3{margin:0 0 7px;font-size:13px;color:#e5dfc6}.save-tools p{font-size:11px;margin:0 0 10px;color:var(--muted)}
+    .save-actions{display:flex;gap:8px;flex-wrap:wrap}.save-actions button{border:1px solid #6277528a;background:#283b2a;color:#f2dfb6;border-radius:10px;font-size:12px;padding:9px 11px;cursor:pointer}.save-actions button:hover{background:#354d33}
+    .save-tools details{font-size:12px;color:#c1d3b2;margin-top:12px}.save-tools summary{cursor:pointer}.takeover-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+    .takeover-grid label{font-size:11px;color:#b9c9aa}.takeover-grid input{display:block;width:100%;min-width:0;margin-top:4px;border:1px solid #657758;background:#0c1a11;color:#fff2d5;border-radius:8px;padding:8px 7px;font-size:14px}
+    .io-notice{margin-top:10px;font-size:11px;color:#e4cd9b;min-height:17px}
+    @media(max-width:950px){.main{grid-template-columns:minmax(0,1fr)}.scene{min-height:540px}.panel{padding:21px}.shop{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.footer-tip{padding-top:12px}}
+    @media(max-width:560px){.app{padding:15px 12px 24px}.topbar{padding-bottom:14px}.brand-logo{width:41px;height:41px}.brand h1{font-size:25px}.brand p{font-size:9px}.pill{display:none}.stats{gap:7px;margin-bottom:10px}.stat{padding:12px 10px;border-radius:14px}.stat label{font-size:9px;letter-spacing:.07em}.stat strong{font-size:18px}.stat strong small{display:block;margin:0;font-size:10px}.main{gap:10px}.scene{min-height:490px;border-radius:18px}.scene-head{left:17px;top:16px}.scene-head h2{font-size:22px}.plant-button{bottom:10%;height:73%;width:90%}.panel{border-radius:18px;padding:18px 13px}.shop{display:flex}.milestone{margin-top:10px;padding:14px 15px}.scene-note{bottom:13px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+    .scene[data-flower-evo="1"] .flowers{color:#fbd88b;text-shadow:0 0 12px #fff0b6}
+    .scene[data-flower-evo="2"] .flowers,.scene[data-flower-evo="3"] .flowers,.scene[data-flower-evo="4"] .flowers{color:#e4d6ff;text-shadow:0 0 20px #d0aaf0,0 0 26px #f8e6b9}
+    /* Waldchronik 0.3 — original prototype style, separate collection screen */
+    .view-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:-3px 0 18px}
+    .view-tab{border:1px solid #506447;background:#13231a;color:#b9caa8;border-radius:13px;padding:10px 18px;cursor:pointer;font-size:13px}
+    .view-tab.active{background:#32452d;color:#ffdfa0;border-color:#c4a16b;box-shadow:0 0 18px #e4b86822}
+    .chronicle{display:none;margin-top:8px}.chronicle.active{display:block}.game-view.hidden{display:none!important}
+    .book{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:2px;padding:15px;background:linear-gradient(120deg,#6a4224,#3e2819 45%,#6d4728);border:2px solid #9c7145;border-radius:22px;box-shadow:0 20px 45px #0007,inset 0 0 28px #1a110ba1}
+    .page{min-width:0;background:radial-gradient(ellipse at top left,#e8d4a7,#dbc18e 65%,#c7a871);color:#34291b;padding:24px 24px 28px;box-shadow:inset 0 0 42px #7b562c55}
+    .page:first-child{border-radius:13px 3px 3px 13px;border-right:4px solid #966b40}.page:last-child{border-radius:3px 13px 13px 3px}
+    .book-kicker{color:#7c5b36;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+    .page h2{font:normal clamp(25px,3vw,37px)/1.1 Georgia,serif;margin:8px 0 11px}.page p{font:15px/1.55 Georgia,serif}
+    .found{margin:0 0 18px;color:#6d573b;font-size:13px}.entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .entry{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;text-align:center;min-height:165px;border:2px solid #aa8651;background:#efdcaf88;border-radius:11px;padding:13px 7px 10px;color:#544126;cursor:pointer;box-shadow:inset 0 0 14px #ac8a543d}
+    .entry:hover,.entry:focus-visible{border-color:#d59038;background:#f8e5b7}.entry.active{border-color:#996026;box-shadow:0 0 0 2px #daa45488,inset 0 0 15px #b68f534e}
+    .entry canvas{width:92px;height:92px;image-rendering:pixelated;object-fit:contain}.entry.locked canvas{filter:grayscale(1);opacity:.75}
+    .entry strong{font:normal 15px Georgia,serif}.entry small{font-size:11px;color:#765d3e}.entry .unknown{position:absolute;top:35px;font:bold 31px Georgia,serif;color:#f4e2b9;text-shadow:0 2px 7px #111}
+    .detail-frame{background:radial-gradient(ellipse at 52% 65%,#31452e,#132c20 70%,#07150e);border:8px ridge #936d3f;border-radius:15px;position:relative;display:grid;place-items:center;aspect-ratio:1.28;min-height:260px;overflow:hidden;box-shadow:inset 0 0 60px #070f0d}
+    #detailArt{width:100%;height:100%;max-height:390px;image-rendering:pixelated;object-fit:contain;animation:portrait-float 4s ease-in-out infinite alternate}
+    .detail-frame.locked #detailArt{filter:grayscale(1);opacity:.6}.detail-question{display:none;position:absolute;font:bold 75px Georgia,serif;color:#e8d2a4}.detail-frame.locked .detail-question{display:block}
+    @keyframes portrait-float{to{transform:translateY(-5px)}}
+    .detail-name{margin:16px 0 3px!important}.detail-meta{margin:0!important;font-size:12px!important;letter-spacing:.08em;color:#795d37}
+    .lore{min-height:65px;font-style:italic}.book-rule{border:0;border-top:1px solid #a77b45;margin:18px 0}
+    .book-stats{display:grid;gap:7px;font-size:13px;color:#5e4b2c}.book-stat{display:flex;justify-content:space-between;gap:12px}
+    .book-bonus{border:1px solid #a47f4b;background:#f4dfa583;border-radius:8px;padding:11px;margin-top:20px;font-size:13px;color:#5e4b2c}
+    .mini-evolution{margin-top:12px;padding:11px 13px;border:1px solid #64754f66;border-radius:11px;background:#17271c;color:#cfdfbd;font-size:12px}
+    .mini-evolution strong{color:#f4d49f}.mini-evolution p{margin:4px 0 0;color:#aabfa3;font-size:11px}
+    @media(max-width:800px){.book{grid-template-columns:1fr}.page:first-child{border-right:0;border-bottom:4px solid #966b40;border-radius:13px 13px 4px 4px}.page:last-child{border-radius:4px 4px 13px 13px}.entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:500px){.view-tabs{margin-bottom:12px}.view-tab{padding:8px 12px}.book{padding:7px;border-radius:14px}.page{padding:17px 14px}.entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.entry{min-height:150px}.entry canvas{width:80px;height:80px}.detail-frame{min-height:200px}.detail-question{font-size:58px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M13 23V11M13 16C5 16 4 10 4 6c6 0 9 3 9 10m0-3c0-7 4-10 9-10 0 6-3 10-9 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></div><div><h1>Waldglut</h1><p>Ein kleiner Funke. Ein wachsender Wald.</p></div></div>
+    <div class="topactions"><span class="pill">CHRONIK-PROTOTYP · 0.3</span><button class="ghost" id="reset" type="button" title="Spielstand zurücksetzen">↺ Neustart</button></div>
+  </header>
+
+  <nav class="view-tabs" aria-label="Waldglut Seiten">
+    <button type="button" class="view-tab active" id="gameTab" aria-pressed="true">✦ Waldlichtung</button>
+    <button type="button" class="view-tab" id="chronicleTab" aria-pressed="false">📖 Waldchronik <span id="chronicleCounter">0/5</span></button>
+  </nav>
+  <div class="stats game-view" aria-live="off">
+    <div class="stat"><label>Dein Licht</label><strong id="wallet">0 <small>✦</small></strong></div>
+    <div class="stat"><label>Licht / Sekunde</label><strong id="perSecond">0 <small>✦/s</small></strong></div>
+    <div class="stat"><label>Gesamt gesammelt</label><strong id="lifetime">0 <small>✦</small></strong></div>
+  </div>
+  <div class="main game-view">
+    <div class="leftcol">
+      <section class="scene" id="scene" data-stage="0" data-growth="sprout" aria-label="Spielwelt Waldglut">
+        <div class="scene-haze"></div><div class="moon"></div>
+        <svg class="trees-back" viewBox="0 0 800 590" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="shade" x2="0" y2="1"><stop stop-color="#10251b"/><stop offset="1" stop-color="#06100c"/></linearGradient></defs><path d="M0 570V0h86L60 145l80-53-55 87 54 77-30 310zM800 590V0h-100l45 139-80-40 55 98-69 87 45 306z" fill="url(#shade)"/><path d="M48 550Q104 250 100-30M738 570Q697 250 694-30" stroke="#142819" stroke-width="35" fill="none" opacity=".8"/><path d="M110 265L20 126M708 240l97-129" stroke="#182a1d" stroke-width="20" opacity=".7"/></svg>
+        <div class="floor"></div><div class="ground-glow"></div>
+        <div class="scene-head"><div class="eyebrow" id="chapter">LICHTUNG 01 · ERWACHEN</div><h2 id="stageTitle">Ein Funke in der Stille</h2></div>
+        <div class="forest-prop moss" aria-hidden="true">🌿</div><div class="forest-prop moss2" aria-hidden="true">🌱</div><div class="forest-prop mushroom" aria-hidden="true">🍄</div><div class="forest-prop mushroom2" aria-hidden="true">🍄</div><div class="forest-prop flowers" aria-hidden="true">✿ ✿</div>
+        <div class="fireflies" id="fireflies" aria-hidden="true"></div>
+        <button class="plant-button" type="button" id="tap" aria-label="Pflanze antippen und Licht sammeln" title="Antippen für Licht">
+          <svg class="plant-svg" viewBox="0 0 420 420" aria-hidden="true"><defs>
+            <linearGradient id="leaf" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#315b37"/><stop offset=".55" stop-color="#8bae63"/><stop offset="1" stop-color="#ebce7b"/></linearGradient>
+            <linearGradient id="leafLight" x1=".1" y1="1" x2=".8" y2="0"><stop stop-color="#355b3a"/><stop offset=".6" stop-color="#96bd7b"/><stop offset="1" stop-color="#f9df98"/></linearGradient>
+            <linearGradient id="stem" x1="0" y1="1" x2=".8" y2="0"><stop stop-color="#5f5c35"/><stop offset=".5" stop-color="#a98b4a"/><stop offset="1" stop-color="#e4bc74"/></linearGradient>
+            <radialGradient id="gold"><stop stop-color="#ffe3a5" stop-opacity=".78"/><stop offset="1" stop-color="#edbe6e" stop-opacity="0"/></radialGradient>
+            <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+          </defs>
+          <ellipse cx="210" cy="331" rx="96" ry="27" fill="#e7b868" opacity=".12" filter="url(#soft)"/>
+          <ellipse cx="210" cy="333" rx="95" ry="15" fill="#32412b"/>
+          <g class="plant-stage sprout">
+            <path d="M210 331 Q211 281 207 246" stroke="url(#stem)" stroke-width="8" stroke-linecap="round" fill="none"/>
+            <path class="leaf" d="M209 284 Q151 283 139 241 Q190 237 209 284Z" fill="url(#leaf)"/>
+            <path class="leaf" d="M211 269 Q233 219 280 229 Q272 269 211 269Z" fill="url(#leafLight)"/>
+            <path class="vein" d="M209 283Q179 259 149 248M213 267Q237 247 271 235"/>
+            <g class="sprout-extra"><path class="leaf" d="M207 246Q175 222 186 196Q215 214 207 246Z" fill="url(#leaf)"/><path class="leaf" d="M208 249Q211 208 244 194Q252 235 208 249Z" fill="url(#leafLight)"/></g>
+          </g>
+          <g class="plant-stage sapling">
+            <path d="M210 333Q202 265 207 202Q211 157 211 116" fill="none" stroke="url(#stem)" stroke-width="13" stroke-linecap="round"/>
+            <path d="M209 250Q178 228 165 206M207 224Q237 204 254 174" fill="none" stroke="url(#stem)" stroke-width="7" stroke-linecap="round"/>
+            <path class="leaf" d="M204 231Q144 230 135 182Q187 186 204 231Z" fill="url(#leaf)"/>
+            <path class="leaf" d="M213 208Q231 162 280 164Q270 205 213 208Z" fill="url(#leafLight)"/>
+            <path class="leaf" d="M171 212Q131 198 130 161Q171 169 171 212Z" fill="url(#leafLight)"/>
+            <path class="leaf" d="M249 180Q257 137 294 123Q299 163 249 180Z" fill="url(#leaf)"/>
+            <path class="leaf" d="M211 162Q163 148 161 102Q206 110 211 162Z" fill="url(#leafLight)"/>
+            <path class="leaf" d="M210 150Q212 103 253 84Q259 139 210 150Z" fill="url(#leaf)"/>
+            <path class="vein" d="M206 228L146 191M217 204L269 175M210 153L175 116M214 145L244 98"/>
+          </g>
+          <g class="plant-stage tree">
+            <path d="M213 331Q196 279 209 233Q217 190 197 142M209 232Q164 183 143 129M211 222Q254 175 273 126M211 276Q251 249 305 236M212 297Q170 274 133 255" fill="none" stroke="url(#stem)" stroke-width="19" stroke-linecap="round"/>
+            <path d="M210 314Q189 320 169 340M211 318Q243 319 262 338" stroke="#94774c" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <ellipse cx="197" cy="137" rx="74" ry="66" fill="#385d35"/><ellipse cx="266" cy="147" rx="69" ry="68" fill="#3b6639"/><ellipse cx="150" cy="183" rx="54" ry="57" fill="#426d3d"/><ellipse cx="267" cy="207" rx="66" ry="54" fill="#477849"/><ellipse cx="223" cy="101" rx="61" ry="60" fill="#527c41"/>
+            <ellipse cx="185" cy="132" rx="58" ry="52" fill="#7da65f" opacity=".48"/><ellipse cx="270" cy="172" rx="49" ry="54" fill="#8ca95c" opacity=".33"/>
+            <path d="M153 160Q197 121 243 91M243 91Q273 122 292 161M183 205Q231 176 279 209" stroke="#d2af65" stroke-width="3" fill="none" opacity=".65"/>
+            <g fill="#ffe5a0" opacity=".8"><circle cx="180" cy="98" r="3"/><circle cx="238" cy="85" r="3"/><circle cx="285" cy="146" r="4"/><circle cx="139" cy="173" r="3"/><circle cx="260" cy="219" r="3"/><circle cx="201" cy="180" r="2"/></g>
+          </g>
+          <ellipse cx="209" cy="333" rx="63" ry="10" fill="#70905a" opacity=".3"/>
+        </svg>
+        </button>
+        <div class="mushroom-colonies" id="mushroomColonies" aria-hidden="true"></div>
+        <div class="particles" id="particles" aria-hidden="true"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <div class="scene-note" id="sceneNote">Tippe auf die Pflanze und sammle Licht ✦</div>
+      </section>
+      <section class="milestone" aria-label="Nächster Meilenstein">
+        <div class="milestone-head"><strong id="nextTitle">Als Nächstes: ein erster Lichtschein</strong><span id="nextCount">0 / 25 ✦</span></div><div class="progress"><i id="bar"></i></div><p>Neue Waldmomente werden durch <strong>insgesamt erzeugtes Licht</strong> freigeschaltet. Käufe nehmen dir diesen Fortschritt nicht weg.</p>
+      </section>
+    </div>
+    <aside class="panel">
+      <div class="eyebrow">DEINE KLEINE LICHTWERKSTATT</div><h2 class="panel-title">Lass den Wald erwachen.</h2><p class="panel-sub">Sammle Licht, verbessere deine Impulse und lass die ersten Helfer für dich leuchten.</p>
+      <div class="shop">
+        <button type="button" class="upgrade" id="buy-click" disabled><span class="glyph" aria-hidden="true">✧</span><span class="details"><span class="name">Lichtimpuls</span><span class="effect">+1 Licht bei jedem Tippen</span><span class="price" id="cost-click">12 ✦ Licht</span></span><span class="count" id="count-click">0</span></button>
+        <button type="button" class="upgrade" id="buy-firefly" disabled><span class="glyph" aria-hidden="true">✺</span><span class="details"><span class="name">Glühwürmchen</span><span class="effect">+0,6 Licht pro Sekunde</span><span class="price" id="cost-firefly">65 ✦ Licht</span></span><span class="count" id="count-firefly">0</span></button>
+        <button type="button" class="upgrade" id="buy-mushroom" disabled><span class="glyph" aria-hidden="true">♧</span><span class="details"><span class="name">Glühpilze</span><span class="effect">+5 Licht pro Sekunde</span><span class="price" id="cost-mushroom">560 ✦ Licht</span></span><span class="count" id="count-mushroom">0</span></button>
+        <button type="button" class="upgrade" id="buy-flower" disabled><span class="glyph" aria-hidden="true">✿</span><span class="details"><span class="name">Leuchtblüten</span><span class="effect">+55 Licht pro Sekunde</span><span class="price" id="cost-flower">9.500 ✦ Licht</span></span><span class="count" id="count-flower">0</span></button>
+      </div>
+      <div class="mushroom-hint" id="mushroomHint" aria-live="off">🍄 Noch keine Glühpilze gekauft · maximal sechs zusätzliche leuchtende Kolonien sichtbar.</div>
+      <section class="evolution" aria-label="Glühwürmchen-Evolution">
+        <div class="evo-head"><h3 id="evoTitle">✦ Kleine Lichtfunken</h3><span class="evo-progress" id="evoCount">0 / 10</span></div>
+        <p class="evo-info" id="evoInfo">Ab 10 Glühwürmchen entwickelt sich dein Schwarm.</p>
+        <div class="evo-track"><i id="evoBar"></i></div><div class="evo-foot" id="evoFoot">0,6 Licht / Sek. je Glühwürmchen</div>
+      </section>
+      <div class="mini-evolution" id="mushroomEvolution">🍄 Glühpilze · noch nicht entdeckt</div>
+      <div class="mini-evolution" id="flowerEvolution">✿ Leuchtblüten · noch nicht entdeckt</div>
+      <section class="save-tools" aria-label="Spielstand sichern und übertragen">
+        <h3>✧ Deinen Wald mitnehmen</h3>
+        <p>0.3 nutzt einen getrennten Spielstand und kopiert den bisherigen 0.2-Spielstand, wenn der Browser ihn bereitstellt. Für einen sicheren Wechsel kannst du deinen Spielstand exportieren und importieren.</p>
+        <div class="save-actions"><button type="button" id="exportSave">Spielstand exportieren</button><button type="button" id="importSave">Spielstand importieren</button><input id="importFile" type="file" accept="application/json,.json" hidden></div>
+        <details><summary>0.1-Spielstand manuell übernehmen</summary><p>Trage die Werte aus deinem geöffneten 0.1-Spiel ein. Die Vorlage wird nur auf Knopfdruck übernommen.</p>
+          <div class="takeover-grid">
+            <label>Verfügbares Licht<input type="number" min="0" step="1" id="oldWallet" value="0"></label>
+            <label>Insgesamt erzeugtes Licht<input type="number" min="0" step="1" id="oldTotal" value="0"></label>
+            <label>Lichtimpulse<input type="number" min="0" step="1" id="oldClick" value="0"></label>
+            <label>Glühwürmchen<input type="number" min="0" step="1" id="oldFirefly" value="0"></label>
+            <label>Glühpilze<input type="number" min="0" step="1" id="oldMushroom" value="0"></label>
+            <label>Leuchtblüten<input type="number" min="0" step="1" id="oldFlower" value="0"></label>
+          </div><div class="save-actions"><button type="button" id="manualTransfer">Diese Werte übernehmen</button></div>
+        </details><div class="io-notice" id="ioNotice" aria-live="polite"></div>
+      </section>
+      <div class="footer-tip"><div class="separator"></div><strong>Ein stiller Wald wächst auch ohne dich.</strong><div>Deine Lichtquellen sammeln weiter, solange diese Seite geöffnet ist. Beim nächsten Öffnen werden bis zu vier Stunden Offline-Licht nachgetragen.</div>
+        <div class="preview-note"><span id="saveStatus">● Fortschritt wird lokal gespeichert</span><button type="button" class="tinybtn" id="preview">Späteren Wald ansehen</button></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="chronicle" id="chronicle" aria-label="Waldchronik – Sammelbuch">
+    <div class="book">
+      <div class="page">
+        <div class="book-kicker">✦ Das Buch der erwachenden Lichtung</div>
+        <h2>Die Waldchronik</h2>
+        <p class="found" id="foundLabel">Glühwürmchen · 0 von 5 Formen entdeckt</p>
+        <div class="entry-grid" id="entryGrid"></div>
+        <p class="book-bonus" id="bonusNotice">✧ Sammle alle fünf Formen, um einen kleinen dauerhaften Lichtbonus freizuschalten.</p>
+        <p style="font-size:12px;color:#725f47;margin-top:20px">Unentdeckte Formen zeigen nur ihre Schatten. Einträge erscheinen automatisch beim Spielen.</p>
+      </div>
+      <div class="page">
+        <div class="book-kicker">✧ Geflüster des Waldes</div>
+        <div class="detail-frame" id="detailFrame"><canvas id="detailArt" width="72" height="72" role="img" aria-label="Pixel-Art-Porträt des ausgewählten Waldwesens"></canvas><span class="detail-question" aria-hidden="true">?</span></div>
+        <h2 class="detail-name" id="detailName">???</h2>
+        <p class="detail-meta" id="detailMeta">Unentdeckte Form</p>
+        <p class="lore" id="detailLore">Seine Geschichte ist noch verborgen.</p>
+        <hr class="book-rule">
+        <div class="book-stats"><div class="book-stat"><span>Freischaltung</span><strong id="detailThreshold">–</strong></div><div class="book-stat"><span>Licht je Glühwürmchen</span><strong id="detailRate">?</strong></div><div class="book-stat"><span>Sammlung</span><strong id="detailProgress">0/5</strong></div></div>
+      </div>
+    </div>
+  </section>
+  <p class="credit">WALDGLUT 0.3 · DIE WALDCHRONIK · PROTOTYP · OFFLINE NUTZBAR · OHNE KONTO</p>
+</div>
+<script>
+(()=>{
+ 'use strict';
+ const KEY='waldglut-prototype-0.3-save', PREVIOUS_KEY='waldglut-prototype-0.2-save', OLD_KEY='waldglut-prototype-0.1-save';
+ const defs={click:{base:12,mult:1.8},firefly:{base:65,mult:1.16},mushroom:{base:560,mult:1.32},flower:{base:9500,mult:1.37}};
+ const steps=[{at:0,title:'Ein Funke in der Stille',desc:'Ein erster Lichtschein'},
+  {at:25,title:'Ein warmer Lichtschein',desc:'Das Pflänzchen glimmt'},
+  {at:250,title:'Der Waldboden erwacht',desc:'Das erste Moos leuchtet'},
+  {at:1000,title:'Die ersten Schatten weichen',desc:'Der Waldboden wird sichtbar'},
+  {at:5000,title:'Ein heimliches Leuchten',desc:'Glühpilze erwachen'},
+  {at:30000,title:'Wurzeln und Zweige',desc:'Ein kleiner Baum wächst'},
+  {at:80000,title:'Mondlicht zwischen Blättern',desc:'Mondlicht fällt ins Blätterdach'},
+  {at:400000,title:'Eine neue Lichtung',desc:'Die Lichtung erwacht'},
+  {at:800000,title:'Ein Wald voller Leben',desc:'Der Garten strahlt'},
+  {at:3000000,title:'Die große Baumkrone',desc:'Ein mächtiger Baum erstrahlt'}];
+ const evolution={
+   firefly:[{at:0,name:'Kleine Lichtfunken',rate:.6},{at:10,name:'Glühschwarm',rate:1.2},{at:25,name:'Bernsteinflügel',rate:2.4},{at:50,name:'Waldlichter',rate:4.8},{at:100,name:'Sternenschwarm',rate:9.6}],
+   mushroom:[{at:0,name:'Glühpilze',rate:5},{at:3,name:'Lichtkappen',rate:10},{at:8,name:'Bernsteinsporen',rate:20},{at:20,name:'Mondpilze',rate:40},{at:50,name:'Urwaldmyzel',rate:80}],
+   flower:[{at:0,name:'Leuchtblüten',rate:55},{at:2,name:'Dämmerblüten',rate:110},{at:5,name:'Mondkelche',rate:220},{at:10,name:'Sternenblüten',rate:440},{at:25,name:'Himmelskrone',rate:880}]
+ };
+ const evoSteps=evolution.firefly;
+ const evoAt=(key)=>evolution[key].reduce((i,v,j)=>state.upgrades[key]>=v.at?j:i,0);
+ const rateFor=(key)=>evolution[key][evoAt(key)].rate;
+ const chronicleBonus=()=>state.upgrades.firefly>=100?1.05:1;
+ const lore=[
+   'Wenn der Wald noch still ist, verraten winzige Lichter, dass bereits Leben in seinen Schatten wohnt.',
+   'Wo sich zehn Lichtfunken begegnen, beginnen sie, miteinander zu tanzen. Ihr Schein wächst im Einklang.',
+   'Ihre Flügel tragen den warmen Schimmer alter Baumharze. In dunklen Nächten zeigen sie den Weg zur Lichtung.',
+   'Manchmal scheint es, als hielten die Waldlichter die Erinnerungen der Blätter fest – einen Herzschlag lang.',
+   'Wenn hundert Lichter ihren Rhythmus finden, sieht man zwischen den Baumkronen ein eigenes kleines Sternbild.'
+ ];
+ const fresh=()=>({wallet:0,total:0,upgrades:{click:0,firefly:0,mushroom:0,flower:0},savedAt:Date.now()});
+ const $=id=>document.getElementById(id);
+ const number=n=>n<1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:n<10?1:0}).format(n):new Intl.NumberFormat('de-DE',{notation:'compact',maximumFractionDigits:2}).format(n);
+ const whole=n=>new Intl.NumberFormat('de-DE',{maximumFractionDigits:0}).format(Math.floor(n));
+ let state=fresh(),preview=false,currentStage=-1,currentEvo=-1,activeFireflies='',activeMushrooms=-1,toastTimer=0,saveTick=0;
+ const normalize=(raw)=>{
+   if(!raw||typeof raw!=='object'||!Number.isFinite(Number(raw.wallet))||!Number.isFinite(Number(raw.total)))throw new Error('Ungültige Spielstanddatei');
+   const obj=fresh();obj.wallet=Number(raw.wallet);obj.total=Number(raw.total);
+   if(obj.wallet<0||obj.total<0||obj.total+1e-4<obj.wallet||obj.total>1e100)throw new Error('Unplausibler Lichtstand');
+   for(const key of Object.keys(defs)) {const n=Number(raw.upgrades?.[key]??0);if(!Number.isInteger(n)||n<0||n>10000)throw new Error('Unplausible Upgradeanzahl');obj.upgrades[key]=n;}
+   const saved=Number(raw.savedAt);obj.savedAt=Number.isFinite(saved)&&saved>0?Math.min(saved,Date.now()):Date.now();return obj;
+ };
+ let importedOld=false;
+ try{
+   const raw=localStorage.getItem(KEY);
+   if(raw)state=normalize(JSON.parse(raw));
+   else{const old=localStorage.getItem(PREVIOUS_KEY)||localStorage.getItem(OLD_KEY);if(old){state=normalize(JSON.parse(old));importedOld=true;}}
+ }catch(err){console.info('Spielstand konnte nicht geladen werden',err)}
+ const evoIndex=()=>evoAt('firefly');
+ const flyRate=()=>rateFor('firefly');
+ const perSecond=()=>state.upgrades.firefly*flyRate()*chronicleBonus()+state.upgrades.mushroom*rateFor('mushroom')+state.upgrades.flower*rateFor('flower');
+ const offline=Math.max(0,Math.min(14400,(Date.now()-state.savedAt)/1000));
+ if(offline>5){const gain=perSecond()*offline;state.wallet+=gain;state.total+=gain;}
+ const cost=k=>{
+   if(k!=='firefly')return Math.ceil(defs[k].base*Math.pow(defs[k].mult,state.upgrades[k]));
+   const n=state.upgrades.firefly;
+   return Math.ceil(65*Math.pow(1.16,Math.min(25,n))*Math.pow(1.125,Math.min(25,Math.max(0,n-25)))*Math.pow(1.10,Math.max(0,n-50)));
+ };
+ const getStage=()=>steps.reduce((acc,s,i)=>state.total>=s.at?i:acc,0);
+ function save(){state.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='● Spielstand gespeichert';}catch(err){$('saveStatus').textContent='Speichern im Browser nicht verfügbar';}}
+ function notice(msg){$('ioNotice').textContent=msg;}
+ function notify(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
+
+ // Each mushroom produces light at its evolution tier; only six purchased colonies are drawn.
+ // The two decorative milestone mushrooms are separate, so the scene never exceeds eight groups.
+ function renderPurchasedMushrooms(){
+   const count=state.upgrades.mushroom;
+   if(activeMushrooms===count)return;
+   const box=$('mushroomColonies');
+   const positions=[{x:10,y:11,w:65},{x:87,y:13,w:63},{x:30,y:20,w:52},{x:69,y:24,w:56},{x:19,y:26,w:48},{x:77,y:9,w:61}];
+   const visible=Math.min(6,count);
+   // Update existing groups rather than removing/recreating every group on every purchase.
+   for(let i=0;i<visible;i++){
+     let el=box.children[i];
+     if(!el){
+       el=document.createElement('div');el.className='purchased-colony';
+       el.innerHTML=`<div class="colony-halo"></div><svg viewBox="0 0 100 86" aria-hidden="true"><ellipse cx="48" cy="78" rx="40" ry="6" fill="#6a7945" opacity=".55"/><path class="stem" d="M24 77Q22 61 25 47L32 47Q29 66 32 77Z M51 77Q47 53 49 32L60 32Q56 55 61 77Z M72 78Q73 68 71 58L78 58Q76 71 80 78Z"/><path class="under" d="M7 49Q25 41 43 49Q36 56 25 55Q15 56 7 49Z M28 34Q55 21 82 34Q72 42 55 41Q37 42 28 34Z M61 60Q75 52 91 60Q85 66 75 66Q68 65 61 60Z"/><path class="cap" d="M6 48Q18 24 42 48Z M27 33Q45 2 83 33Z M60 59Q72 41 91 59Z"/><circle class="spot" cx="19" cy="40" r="2.8"/><circle class="spot" cx="28" cy="42" r="2"/><circle class="spot" cx="53" cy="21" r="4"/><circle class="spot" cx="66" cy="27" r="2.5"/><circle class="spot" cx="75" cy="55" r="2.3"/></svg>`;
+       box.appendChild(el);
+     }
+     const p=positions[i],extras=Math.max(0,Math.floor((count-1-i)/6));
+     const strength=Math.min(1,Math.log2(extras+1)/4);
+     el.style.setProperty('--x',p.x+'%');el.style.setProperty('--y',p.y+'%');el.style.setProperty('--width',p.w+'px');
+     el.style.setProperty('--scale',String(1+strength*.25 + evoAt('mushroom')*.055));
+     el.style.setProperty('--glow',String(.34+strength*.40+evoAt('mushroom')*.095));
+     el.style.setProperty('--delay',(i*.07)+'s');
+   }
+   while(box.children.length>visible)box.lastElementChild.remove();
+   $('mushroomHint').innerHTML=count===0?'🍄 Noch keine Glühpilze gekauft · maximal sechs zusätzliche leuchtende Kolonien sichtbar.':
+     '<strong>🍄 '+whole(count)+' Glühpilze aktiv</strong> · '+visible+' von max. 6 kaufbaren Kolonien sichtbar. '+(count>6?'Weitere Käufe verstärken ihr Leuchten.':'Jeder Kauf belebt deinen Wald.');
+   activeMushrooms=count;
+ }
+ function renderFireflies(){const n=Math.min(20,state.upgrades.firefly),ev=evoIndex(),sig=n+'-'+ev;if(sig===activeFireflies)return;activeFireflies=sig;const box=$('fireflies');box.replaceChildren();for(let i=0;i<n;i++){const d=document.createElement('span');d.className='firefly evo-'+ev;d.style.left=(15+(i*29%70))+'%';d.style.top=(29+(i*37%51))+'%';d.style.setProperty('--dx',((i*19%95)-45)+'px');d.style.setProperty('--dy',((i*23%70)-35)+'px');d.style.setProperty('--delay',(-i*.47)+'s');d.style.setProperty('--duration',(2.1+(i%5)*.61)+'s');box.appendChild(d);}}
+
+ let selectedEntry=0,chronicleLast='',page='game';
+ function drawPortrait(canvas,index,locked=false){
+   const ctx=canvas.getContext('2d');if(!ctx)return;
+   ctx.imageSmoothingEnabled=false;
+   const size=72;ctx.clearRect(0,0,size,size);
+   if(locked){
+     // A recognizable pixel outline, intentionally not a colored or filled portrait.
+     const outline='#73634a';
+     ctx.strokeStyle=outline;ctx.lineWidth=2;ctx.lineJoin='miter';
+     const wingW=15+index*2,wingH=10+index*2;
+     ctx.strokeRect(12-(index*2),23-(index*2),wingW,wingH);
+     ctx.strokeRect(46,23-(index*2),wingW,wingH);
+     ctx.strokeRect(29,22,14,27);
+     ctx.strokeRect(32,45,8,12);
+     if(index>=2){ctx.strokeRect(13,36,12,8);ctx.strokeRect(49,36,12,8);}
+     if(index>=3){ctx.strokeRect(22,13,6,6);ctx.strokeRect(45,13,6,6);}
+     if(index>=4){ctx.strokeRect(34,6,5,6);ctx.strokeRect(57,42,5,5);}
+     return;
+   }
+   const palettes=[['#c6c4a1','#e2cb79','#ffe7a5'],['#b6d09f','#e8c872','#fff1a1'],['#d6a16f','#f2c16b','#ffe5a7'],['#9cc6b2','#d7e3a5','#fff2cf'],['#b8a8df','#f0d7a2','#fff7db']];
+   const p=palettes[index];
+   const square=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+   // The little creature grows wings, ornaments, and its own light in every new form.
+   const wings=[[[13,26,15,9],[45,26,15,9]],[[9,20,19,13],[44,20,19,13]],[[8,18,21,16],[43,18,21,16]],[[6,15,23,18],[43,15,23,18]],[[4,13,24,20],[43,13,24,20]]];
+   const w=wings[index];
+   for(const [x,y,ww,hh] of w){square(x,y,ww,hh,p[0]);square(x+3,y+2,Math.max(1,ww-6),Math.max(1,hh-5),p[1]);square(x+6,y+4,Math.max(1,ww-12),3,p[2]);}
+   if(index>=2){square(15,35,11,9,p[0]);square(46,35,11,9,p[0]);}
+   if(index>=3){square(17,15,9,5,p[2]);square(46,15,9,5,p[2]);}
+   square(30,23,12,19,'#65412e');square(32,20,8,7,'#7b5334');
+   square(32,25,3,3,'#181c16');square(38,25,3,3,'#181c16');
+   square(34,18,2,3,p[2]);square(39,18,2,3,p[2]);
+   square(33,38,8,13,p[1]);square(30,43,14,12,p[2]);square(33,48,8,9,'#fff4bd');
+   if(index>=1){square(24,47,4,4,p[2]);square(47,47,4,4,p[2]);}
+   if(index>=2){square(23,14,3,3,p[2]);square(49,13,3,3,p[2]);square(15,50,3,3,p[2]);}
+   if(index>=3){square(35,8,4,4,p[2]);square(9,41,4,4,p[2]);square(57,40,4,4,p[2]);}
+   if(index>=4){square(36,3,2,5,p[2]);square(18,9,5,3,p[2]);square(56,11,4,3,p[2]);square(6,33,4,4,p[2]);square(63,33,4,4,p[2]);}
+ }
+ function renderChronicle(force=false){
+   const owned=state.upgrades.firefly;
+   const unlocked=evoSteps.filter(s=>owned>=Math.max(1,s.at)).length;
+   const sig=owned+'-'+selectedEntry;
+   if(!force&&sig===chronicleLast)return;
+   chronicleLast=sig;
+   $('chronicleCounter').textContent=unlocked+'/5';$('foundLabel').textContent='Glühwürmchen · '+unlocked+' von 5 Formen entdeckt';
+   const grid=$('entryGrid');grid.replaceChildren();
+   evoSteps.forEach((step,i)=>{
+      const seen=owned>=Math.max(1,step.at);
+      const b=document.createElement('button');b.type='button';b.className='entry '+(!seen?'locked ':'')+(selectedEntry===i?'active':'');
+      b.setAttribute('aria-label',seen?step.name+', entdeckt':'Unbekannte Form, bei '+Math.max(1,step.at)+' Glühwürmchen');
+      const c=document.createElement('canvas');c.width=72;c.height=72;drawPortrait(c,i,!seen);b.appendChild(c);
+      if(!seen){const q=document.createElement('span');q.className='unknown';q.textContent='?';q.setAttribute('aria-hidden','true');b.appendChild(q);}
+      const name=document.createElement('strong');name.textContent=seen?step.name:'???';b.appendChild(name);
+      const at=document.createElement('small');at.textContent='ab '+Math.max(1,step.at)+' Glühwürmchen';b.appendChild(at);
+      b.onclick=()=>{selectedEntry=i;renderChronicle(true);};grid.appendChild(b);
+   });
+   const step=evoSteps[selectedEntry],seen=owned>=Math.max(1,step.at);
+   $('detailFrame').classList.toggle('locked',!seen);drawPortrait($('detailArt'),selectedEntry,!seen);
+   $('detailArt').setAttribute('aria-label',seen?'Pixel-Art-Porträt: '+step.name:'Unbekanntes Pixel-Art-Porträt');
+   $('detailName').textContent=seen?step.name:'???';
+   $('detailMeta').textContent=seen?'Entdeckt · Evolutionsstufe '+(selectedEntry+1):'Unentdeckte Form · Stufe '+(selectedEntry+1);
+   $('detailLore').textContent=seen?lore[selectedEntry]:'Ein leiser Umriss im Dunkel. Wer weiß, welches Licht hier später erwacht?';
+   $('detailThreshold').textContent=Math.max(1,step.at)+' Glühwürmchen';
+   $('detailRate').textContent=seen?number(step.rate)+' ✦/s':'?';
+   $('detailProgress').textContent=unlocked+' von 5';
+   $('bonusNotice').textContent=unlocked===5?'✦ Vollständige Sammlung! Dauerhaft +5 % Glühwürmchen-Licht.':'✧ Vollständige Glühwürmchen-Sammlung: +5 % Glühwürmchen-Licht.';
+ }
+ function setPage(which){page=which;const show=which==='chronicle';
+   document.querySelectorAll('.game-view').forEach(el=>el.classList.toggle('hidden',show));
+   $('chronicle').classList.toggle('active',show);
+   $('chronicleTab').classList.toggle('active',show);$('gameTab').classList.toggle('active',!show);
+   $('chronicleTab').setAttribute('aria-pressed',String(show));$('gameTab').setAttribute('aria-pressed',String(!show));
+   if(show)renderChronicle(true);
+ }
+ $('gameTab').addEventListener('click',()=>setPage('game'));
+ $('chronicleTab').addEventListener('click',()=>setPage('chronicle'));
+ function renderMiniEvolution(key,id){const list=evolution[key],idx=evoAt(key),curr=list[idx],next=list[idx+1];
+   const count=state.upgrades[key],name=key==='mushroom'?'🍄':'✿';
+   $(id).innerHTML='<strong>'+name+' '+curr.name+' · '+count+' gekauft</strong><p>'+number(curr.rate)+' Licht/s pro Stück · '+(next?'nächste Evolution bei '+next.at+' Käufen: '+next.name:'höchste Evolutionsstufe erreicht')+'</p>';
+ }
+
+ function render(){const stage=getStage(),displayStage=preview?steps.length-1:stage,scene=$('scene');
+   scene.dataset.stage=String(displayStage);scene.dataset.growth=displayStage>=9?'tree':displayStage>=5?'sapling':'sprout';
+   scene.classList.toggle('has-moss',displayStage>=2);scene.classList.toggle('has-mushrooms',displayStage>=4);
+   scene.classList.toggle('has-flowers',displayStage>=6);scene.classList.toggle('has-moon',displayStage>=6);
+   $('stageTitle').textContent=preview?'Vorschau: Der erwachte Wald':steps[displayStage].title;
+   $('chapter').textContent=preview?'NUR VISUELLE VORSCHAU':'LICHTUNG 01 · ERWACHEN';
+   $('sceneNote').textContent=preview?'Vorschau verändert deinen Spielstand nicht':'Tippe auf die Pflanze und sammle Licht ✦';
+   $('wallet').innerHTML=whole(state.wallet)+' <small>✦</small>';
+   $('perSecond').innerHTML=number(perSecond())+' <small>✦/s</small>';
+   $('lifetime').innerHTML=whole(state.total)+' <small>✦</small>';
+   for(const key of Object.keys(defs)){const c=cost(key);$('cost-'+key).textContent=whole(c)+' ✦ Licht';$('count-'+key).textContent=String(state.upgrades[key]);$('buy-'+key).disabled=state.wallet+1e-7<c;}
+   const next=steps[stage+1];if(next){const prev=steps[stage].at;$('nextTitle').textContent='Als Nächstes: '+next.desc;$('nextCount').textContent=whole(state.total)+' / '+whole(next.at)+' ✦';$('bar').style.width=Math.min(100,Math.max(0,(state.total-prev)/(next.at-prev)*100))+'%';}else{$('nextTitle').textContent='Der Wald ist erwacht – weiterleuchten!';$('nextCount').textContent=whole(state.total)+' ✦';$('bar').style.width='100%';}
+   $('preview').textContent=preview?'Zurück zum aktuellen Wald':'Späteren Wald ansehen';
+   const ev=evoIndex(),current=evoSteps[ev],nextEv=evoSteps[ev+1];
+   $('evoTitle').textContent='✦ '+current.name;
+   $('evoInfo').textContent=nextEv?('Bei '+nextEv.at+' Glühwürmchen: '+nextEv.name+' und '+number(nextEv.rate)+' Licht/s pro Tier'):'Höchste geplante Evolution erreicht!';
+   $('evoCount').textContent=nextEv?state.upgrades.firefly+' / '+nextEv.at:'MAX';
+   $('evoBar').style.width=nextEv?(Math.max(0,Math.min(100,100*(state.upgrades.firefly-current.at)/(nextEv.at-current.at)))+'%'):'100%';
+   $('evoFoot').textContent=number(current.rate)+' Licht/s je Glühwürmchen · '+whole(state.upgrades.firefly*current.rate*chronicleBonus())+' Licht/s insgesamt'+(chronicleBonus()>1?' · inkl. +5 % Chronikbonus':'');
+   $('buy-firefly').querySelector('.effect').textContent='+'+number(current.rate*chronicleBonus())+' Licht/s je Tier · nächste Evolution: '+(nextEv?nextEv.at:'MAX');
+   renderFireflies();renderPurchasedMushrooms();renderMiniEvolution('mushroom','mushroomEvolution');renderMiniEvolution('flower','flowerEvolution');renderChronicle();
+   $('buy-mushroom').querySelector('.effect').textContent='+'+number(rateFor('mushroom'))+' Licht/s je Pilz';
+   $('buy-flower').querySelector('.effect').textContent='+'+number(rateFor('flower'))+' Licht/s je Blüte';
+   scene.style.setProperty('--mushroom-evo',String(evoAt('mushroom')));
+   scene.dataset.flowerEvo=String(evoAt('flower'));
+   if(stage!==currentStage){if(currentStage>=0&&stage>currentStage)notify('✦ '+steps[stage].desc+'!');currentStage=stage;}
+   if(ev!==currentEvo){if(currentEvo>=0&&ev>currentEvo)notify('✨ Evolution: '+current.name+' · '+number(current.rate)+' Licht/s pro Tier!');currentEvo=ev;}
+ }
+ function particleAt(x,y,gain){const box=$('particles');const rect=box.getBoundingClientRect();const px=Math.max(35,Math.min(rect.width-35,x-rect.left)),py=Math.max(60,Math.min(rect.height-50,y-rect.top));const label=document.createElement('span');label.className='click-float';label.textContent='+'+number(gain)+' ✦';label.style.left=px+'px';label.style.top=py+'px';box.appendChild(label);setTimeout(()=>label.remove(),980);
+   for(let i=0;i<6;i++){const p=document.createElement('span');p.className='particle';p.style.left=(px+(Math.random()-.5)*35)+'px';p.style.top=(py+(Math.random()-.5)*32)+'px';p.style.setProperty('--dx',((Math.random()-.5)*115)+'px');p.style.setProperty('--dy',(-30-Math.random()*95)+'px');box.appendChild(p);setTimeout(()=>p.remove(),980);}}
+ const tap=$('tap');function doTap(ev){const gain=1+state.upgrades.click;state.wallet+=gain;state.total+=gain;const rect=tap.getBoundingClientRect();const x=ev&&ev.clientX>0?ev.clientX:rect.left+rect.width/2;const y=ev&&ev.clientY>0?ev.clientY:rect.top+rect.height*.56;particleAt(x,y,gain);tap.classList.remove('bump');void tap.offsetWidth;tap.classList.add('bump');render();}
+ tap.addEventListener('click',doTap);
+ for(const key of Object.keys(defs)){$('buy-'+key).addEventListener('click',()=>{const price=cost(key);if(state.wallet+1e-7<price)return;state.wallet=Math.max(0,state.wallet-price);state.upgrades[key]++;render();save();if(key==='mushroom')notify(state.upgrades.mushroom<=6?'🍄 Neue Glühpilz-Kolonie erwacht!':'🍄 Deine Glühpilz-Kolonien leuchten kräftiger!');});}
+ $('reset').addEventListener('click',()=>{if(!confirm('Wirklich neu beginnen? Nur dein derzeitiger 0.3-Wald und dessen Licht werden gelöscht. Dein 0.2-Spielstand bleibt erhalten.'))return;state=fresh();preview=false;currentStage=-1;currentEvo=-1;activeFireflies='';activeMushrooms=-1;selectedEntry=0;chronicleLast='';setPage('game');render();save();notify('Ein neuer Funke erwacht.');});
+ $('preview').addEventListener('click',()=>{preview=!preview;render();});
+ $('exportSave').addEventListener('click',()=>{save();const payload={format:'waldglut-save',version:3,...state};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');const url=URL.createObjectURL(blob);a.href=url;a.download='waldglut-spielstand-0.3.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);notice('Spielstand-Datei erstellt. Heb sie gut auf!');});
+ $('importSave').addEventListener('click',()=>$('importFile').click());
+ $('importFile').addEventListener('change',async()=>{const file=$('importFile').files?.[0];if(!file)return;try{if(file.size>100000)throw new Error('Datei zu groß');const parsed=JSON.parse(await file.text());const proposed=normalize(parsed);if(!confirm('Aktuellen Spielstand in Version 0.3 durch diesen importierten Spielstand ersetzen?'))return;state=proposed;currentStage=-1;currentEvo=-1;activeFireflies='';activeMushrooms=-1;chronicleLast='';preview=false;save();render();notice('Spielstand importiert.');}catch(err){notice('Import fehlgeschlagen: '+err.message)}finally{$('importFile').value='';}});
+ $('manualTransfer').addEventListener('click',()=>{try{const v=id=>Number($(id).value);const candidate={wallet:v('oldWallet'),total:v('oldTotal'),upgrades:{click:v('oldClick'),firefly:v('oldFirefly'),mushroom:v('oldMushroom'),flower:v('oldFlower')},savedAt:Date.now()};const proposed=normalize(candidate);if(!confirm('Die angegebenen Werte in Version 0.3 übernehmen? Dein 0.3-Stand wird ersetzt; ältere Versionen bleiben unverändert.'))return;state=proposed;preview=false;currentStage=-1;currentEvo=-1;activeFireflies='';activeMushrooms=-1;chronicleLast='';save();render();notice('0.1-Werte übernommen. Du kannst hier weiterspielen.');}catch(err){notice('Übernahme fehlgeschlagen: '+err.message)}});
+ let last=performance.now();function frame(time){const delta=Math.min(14400,Math.max(0,(time-last)/1000));last=time;const rate=perSecond();if(rate>0){const gain=rate*delta;state.wallet+=gain;state.total+=gain;}saveTick+=delta;if(saveTick>3){saveTick=0;save();}requestAnimationFrame(frame);}
+ setInterval(render,140);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+ render();save();if(importedOld)notice('Dein bisheriger Spielstand wurde als Kopie in 0.3 übernommen. 0.2.1 bleibt unverändert.');
+ if(offline>5&&perSecond()>0)notify('Willkommen zurück! +'+whole(offline*perSecond())+' Licht gesammelt.');requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
